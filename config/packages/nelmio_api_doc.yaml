@@ -1,0 +1,29 @@
+nelmio_api_doc:
+    areas:
+        path_patterns: # an array of regexps (document only routes under /api, except /api/doc)
+            - ^/api(?!/doc$)
+        # host_patterns: # document only routes with a host of the form api.*
+        #     - ^api\.
+    documentation:
+        servers:
+            # For your local development environment
+            - url: https://localhost # Use HTTPS and your correct local domain/IP
+              description: Local Development Server
+            # If you also plan for a production environment later:
+            # - url: https://api.yourdomain.com
+            #   description: Production API Server
+            # - url: https://yourdomain.com/api # If your API is under /api prefix on your main domain
+            #   description: Production API - main domain
+        info:
+            title: My App
+            description: This is an awesome app!
+            version: 1.0.0
+            x-build: #CommitHash
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+        security:
+            - Bearer: []

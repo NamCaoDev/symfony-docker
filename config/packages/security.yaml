@@ -1,0 +1,78 @@
+security:
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
+    providers:
+        # used to reload user from session & other features (e.g. switch_user)
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            pattern: ^/api/(?!doc$)
+            lazy: true
+            provider: app_user_provider
+            logout:
+                path: app_logout
+            json_login:
+                # api_login is a route we will create below
+                check_path: api_login
+                # where to redirect after logout
+                # target: app_any_route
+                username_path: email # Default, but good to be explicit
+                password_path: password # Default, but good to be explicit
+                # These handlers are provided by LexikJWTAuthenticationBundle.
+                # They will automatically issue a JWT on success or return a JSON 401 on failure.
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            stateless: true
+            jwt: ~
+            access_token:
+                token_handler: App\Security\AccessTokenHandler
+            entry_point: App\Security\AuthenticationEntryPoint
+
+            # activate different ways to authenticate
+            # https://symfony.com/doc/current/security.html#the-firewall
+
+            # https://symfony.com/doc/current/security/impersonating_user.html
+            # switch_user: true
+        api_doc_firewall: # New firewall for /api/doc
+            pattern: ^/api/doc # Matches exactly /api/doc and its sub-paths
+            security: false # <--- Make this firewall completely open
+
+        secured_area:
+            # ...
+            form_login:
+                # ...
+                enable_csrf: true
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        # - { path: ^/admin, roles: ROLE_ADMIN }
+        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/register, roles: PUBLIC_ACCESS }
+         # Allow your login route to be public
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        # Require authentication for all other /api routes
+        - { path: ^/api/, roles: IS_AUTHENTICATED_FULLY }
+        # Or for specific roles:
+        # - { path: ^/api/admin, roles: ROLE_ADMIN }
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon
